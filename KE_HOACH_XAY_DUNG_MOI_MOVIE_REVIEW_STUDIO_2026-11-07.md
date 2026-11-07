@@ -1,7 +1,7 @@
 # BÁO CÁO KẾ HOẠCH XÂY DỰNG MỚI — MOVIE REVIEW STUDIO
 
 **Mã tài liệu:** MRS-GREENFIELD-PLAN-001  
-**Phiên bản tài liệu:** 1.3 — Kế hoạch hợp nhất từ đánh giá vòng 2; cập nhật Spike 0, nguồn lực, hợp đồng dữ liệu, kiểm chứng và phát hành  
+**Phiên bản tài liệu:** 1.3 — Kế hoạch hợp nhất từ đánh giá vòng 2; cập nhật Spike 0, nguồn lực, 6 contract đầu ra, 2 reviewer, name grounding, CI/SQLite, TTS option B, kiểm thử bản cài sạch và resume render  
 **Ngày lập:** 07/11/2026  
 **Vị trí lưu:** D:\review-phim\KE_HOACH_XAY_DUNG_MOI_MOVIE_REVIEW_STUDIO_2026-11-07.md  
 **Tình trạng:** KẾ HOẠCH CHỜ PHÊ DUYỆT; P0 hiện BLOCKED do chưa chứng minh đủ owner, nguồn có quyền, reviewer và golden set. Các ước lượng/điểm/ngưỡng là giả thuyết, chưa có sản phẩm hoặc benchmark P3/P4.
@@ -49,7 +49,7 @@
 - Ứng dụng tập trung vào **review phim**, không phải sản phẩm dịch phụ đề/dubbing.
 - Một máy một người vận hành tại thời điểm đầu.
 - **P0 phải có một video narrative EN dài 3–10 phút**, quyền phân tích và quyền tái sử dụng clip/âm thanh có văn bản và SHA; chưa có thì P0 BLOCKED.
-- **P0 phải chỉ định reviewer và lịch chấm, chuẩn bị ba review Việt viết tay, transcript/bản nghĩa và 10–15 câu hỏi diễn biến có đáp án/timecode** để tạo golden set P1.
+- **P0 phải chỉ định hai reviewer độc lập và lịch chấm**, chuẩn bị ba review Việt viết tay, transcript/bản nghĩa và 10–15 câu hỏi diễn biến có đáp án/timecode cùng 5 câu hỏi giá trị bình luận để tạo golden set P1.
 - **Trước P0 phải chốt hình thức phân phối** (nội bộ/mã mở/thương mại) để làm cơ sở đánh giá GPL/LGPL/voice/model.
 - Chính sách AI local-only là mặc định của kế hoạch mới, có thể được chủ dự án xác nhận độc lập.
 
@@ -134,7 +134,7 @@
 | **ClaimAuditService** | **Non-LLM first:** kiểm tra evidence refs, nguồn/timecode, exact/contains cho quote, semantic retrieval, rules phủ định/tên/chronology; NO_SUPPORT → INSUFFICIENT_EVIDENCE; conflict → human review | Tự viết deterministic validators + embeddings để tìm nguồn + human reviewer; **LLM không được tự cấp SUPPORTED** |
 | ScriptRevisionStore | Lưu version, diff, hash, duyệt | SQLite/JSON |
 | ScriptStudioPage | Editor và nút sinh/viết lại/duyệt | PySide6 |
-| NarrationHandoff | Chia lời dẫn, giữ pronunciation map và script hash | VieNeu-TTS ở bước sau |
+| NarrationHandoff | Chia lời dẫn, giữ pronunciation map, script hash và voice license | VieNeu v3 Turbo hoặc adapter TTS thay thế đã qua P1a |
 
 **Model text — rủi ro then chốt:** llama.cpp là runtime, Qwen text 4B/8B chỉ là ứng viên cần benchmark **khả năng viết review Việt dài, không lặp, đúng diễn biến**. P1 dùng 03 bài review mẫu + rubric (Mục 15.4) và 10–15 câu hỏi diễn biến, không giả định 8B đủ tốt. VRAM của model GGUF còn tính KV-cache và runtime; một heavy GPU model tại một thời điểm. Nếu P1 thất bại, giảm phạm vi review ngắn hoặc tăng biên tập thủ công, không ép P3 PASS.
 
@@ -142,7 +142,7 @@
 
 #### 2.5.7. Hợp đồng dữ liệu cho đủ sáu đầu ra của AI Script Studio
 
-**Quy ước:** JSON Schema/Pydantic phải validate, mọi artifact có schema_version, project ID, source SHA, producer/model revision, timestamps; ID ổn định và SHA của file nguồn hoặc revision. Các ví dụ dưới đây **chỉ là contract thiết kế**, không phải kết quả chạy mô hình. JSON là nguồn dữ liệu có thẩm quyền, Markdown và voice handoff được dẫn xuất từ revision đã xác thực.
+**Quy ước:** JSON Schema/Pydantic phải validate từng artifact; common metadata (project ID, source SHA, producer/model revision, UTC timestamps) lưu đầy đủ trong revision manifest hoặc được tham chiếu bằng revision SHA từ artifact; ID và nguồn phải có khả năng truy xuất. Ví dụ bên dưới là **mẫu dữ liệu tối thiểu**, không phải JSON Schema đầy đủ hay kết quả chạy mô hình. P2 phải cung cấp schema máy kiểm tra được cho từng phiên bản. JSON là nguồn dữ liệu có thẩm quyền, Markdown và voice handoff được dẫn xuất từ revision đã xác thực.
 
 **1) review_outline.json — OutlineContract v1**
 
@@ -556,7 +556,7 @@ Không dùng số bài pytest PASS hay một file demo đơn lẻ để thay th�
 - Nguồn là video truyện ngắn tiếng Anh 3–10 phút, có quyền phân tích và tái sử dụng.
 - ASR trả transcript **tiếng Anh** có timecode; dịch nghĩa Việt là artifact riêng.
 - Có danh sách sự kiện phù hợp nguồn và kịch bản review **tiếng Việt mới** được người biên tập sửa/duyệt.
-- VieNeu sinh file audio tiếng Việt nghe được.
+- **Engine TTS offline được P1a chấp thuận** (dự kiến VieNeu v3 Turbo, hoặc phương án khác đã chứng minh giọng Việt và license) sinh file WAV tiếng Việt nghe được; voice thu tay chỉ thuộc workflow Guided, không tự thay nghĩa vụ auto TTS của MVP.
 - Output dùng các đoạn hình thực tế được chọn theo timeline; không thay toàn bộ bằng ảnh tĩnh/lavfi giả lập.
 - FFmpeg xuất MP4 chứa H.264 + AAC; ffprobe kiểm tra đọc lại metadata.
 - Người kiểm tra **xem và nghe MP4**, đối chiếu ít nhất các critical claims với video nguồn.
@@ -604,7 +604,7 @@ Ngưỡng CER/WER, dịch, độ phù hợp cảnh, thời gian xử lý, VRAM v
 | StoryEvent/nhân vật có nguồn/chronology | Editorial owner — TBD | Evidence IDs, clip mốc nguồn |
 | **03 kịch bản review Việt viết tay**, giọng văn được định nghĩa | Editorial owner — TBD | File mẫu, reviewer note, spoiler profile |
 | **10–15 câu hỏi/đáp án về diễn biến phim** | QA owner — TBD | Answer + source timestamp + critical flag |
-| **Reviewer được chỉ định, lịch chấm, rubric ký** | Product owner — TBD | Reviewer ID, rubric version, lịch review |
+| **Hai reviewer độc lập được chỉ định, lịch chấm, rubric ký** | Product owner — TBD | Reviewer IDs, rubric version, lịch review, kế hoạch xử lý bất đồng |
 | License inventory + phương án nội bộ/open-source/thương mại | Legal owner — TBD | Quyết định phát hành, danh mục license |
 
 Thiếu video có quyền/reviewer/ba review mẫu thì **không được tuyên bố P0 READY/P1 QUALITY PASS**; chỉ được chạy các thử nghiệm synthetic kỹ thuật tách biệt. Reviewer không được lấy điểm tự chấm của LLM làm kết quả chính thức.
@@ -690,11 +690,11 @@ Dù sử dụng hầu hết engine từ GitHub, ứng dụng vẫn cần tự vi
 
 ## 20. HÀNH ĐỘNG KẾ TIẾP ĐƯỢC ĐỀ NGHỊ
 
-1. Dùng **chính tài liệu duy nhất này** làm nguồn yêu cầu mới cho dự án Movie Review Studio; ưu tiên thực thi điều kiện chất lượng tại 2.4/15.4–15.7/22.
-2. Rà soát quyết định Mục 19 (đặc biệt hình thức phát hành **trước P0**), chuẩn bị video mẫu có quyền + reviewer + 03 review mẫu + 10–15 golden QA; chốt phạm vi MVP bằng demo EN→VI MP4.
-3. Tạo mới repository sau khi được phép; không import dự án có sẵn để giả định là “greenfield”.
+1. Dùng **chính tài liệu duy nhất này** làm nguồn yêu cầu mới cho Movie Review Studio; ưu tiên điều kiện tại Mục 2.4–2.5, Mục 13–14 và Mục 15.4–15.8.
+2. Rà soát Mục 19 (đặc biệt hình thức phát hành **trước P0**), chuẩn bị video có quyền + **hai reviewer độc lập** + 03 review mẫu + 10–15 QA diễn biến + 5 câu đánh giá bình luận; thử **Spike 0 text-only** trước khi đầu tư media, rồi mới chốt demo EN→VI MP4.
+3. Kho GitHub hiện chứa kế hoạch; chỉ tạo/triển khai mã nguồn khi được phép và sau khi Spike 0/P1b chứng minh hướng text review khả thi. Không nhập mã cũ để giả làm dự án greenfield.
 4. Lập scoreboard cho từng OSS candidate: Windows, offline, API, resources, quality, maintenance, license, integration effort.
-5. Chọn engine cơ sở cho P1; spike FFmpeg/PySceneDetect → Faster-Whisper (CUDA12/cuDNN9 runtime test) → translator → LLM **review Việt + rubric** → non-LLM ClaimAudit → VieNeu v3 Turbo. VLM optional, có thể hoãn sau P3.
+5. **Spike 0:** llama.cpp text-only review Việt + rubric trước. **P1b** chất lượng script và ClaimAudit, **P1a** FFmpeg/PySceneDetect/ASR (CPU INT8 & CUDA12/cuDNN9)/Argos baseline/TTS + phương án B chạy song song. VLM là tùy chọn có thể hoãn sau P3.
 6. Chỉ sau spike pass mới triển khai domain contracts, controller, GUI và pipeline end-to-end.
 7. Giữ lại log/benchmark của **dự án mới** để ra quyết định có bằng chứng; không sử dụng số liệu của bất kỳ dự án khác như số đo của dự án này.
 
