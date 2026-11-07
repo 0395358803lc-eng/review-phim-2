@@ -1,10 +1,10 @@
 # BÁO CÁO KẾ HOẠCH XÂY DỰNG MỚI — MOVIE REVIEW STUDIO
 
 **Mã tài liệu:** MRS-GREENFIELD-PLAN-001  
-**Phiên bản tài liệu:** 1.2 — Hiệu chỉnh trực tiếp theo báo cáo phản biện (rubric review, golden set, non-LLM audit, P0/P1, runtime/license); giữ một tài liệu duy nhất  
+**Phiên bản tài liệu:** 1.3 — Kế hoạch hợp nhất từ đánh giá vòng 2; cập nhật Spike 0, nguồn lực, hợp đồng dữ liệu, kiểm chứng và phát hành  
 **Ngày lập:** 07/11/2026  
 **Vị trí lưu:** D:\review-phim\KE_HOACH_XAY_DUNG_MOI_MOVIE_REVIEW_STUDIO_2026-11-07.md  
-**Tình trạng:** KẾ HOẠCH ĐANG CHỜ DUYỆT — chưa viết mã, chưa cài model, chưa đo chất lượng review và chưa đủ cơ sở cam kết P3/P4. Các số/ngưỡng bên dưới là **đề xuất để hiệu chuẩn ở P1**, không phải kết quả đo.
+**Tình trạng:** KẾ HOẠCH CHỜ PHÊ DUYỆT; P0 hiện BLOCKED do chưa chứng minh đủ owner, nguồn có quyền, reviewer và golden set. Các ước lượng/điểm/ngưỡng là giả thuyết, chưa có sản phẩm hoặc benchmark P3/P4.
 
 > **Tuyên bố dự án mới:** Tài liệu này mô tả một sản phẩm được thiết kế từ số 0. Không dùng mã nguồn, cơ sở dữ liệu, cấu trúc repository, checkpoint, kết quả kiểm thử hoặc quyết định kiến trúc của bất kỳ dự án trước nào làm điều kiện tiên quyết. Các công cụ mã nguồn mở chỉ là ứng viên để đánh giá và tích hợp mới, không mặc nhiên được chấp thuận để cài đặt/phân phối.
 
@@ -31,7 +31,7 @@
 4. Dịch nghĩa lời thoại/phụ đề sang tiếng Việt, giữ nguyên bản nguồn để so sánh.
 5. Phát hiện các cảnh cắt; trích khung hình có thời gian và tạo mô tả bằng AI thị giác khi cần.
 6. Gộp lời thoại + hình ảnh thành bản đồ sự kiện, nhân vật và trình tự câu chuyện.
-7. **AI tự tạo kịch bản review tiếng Việt** gồm dàn ý, lời kể nhiều phần, bình luận có căn cứ, liên kết nguồn và kiểm duyệt; không phải dịch/lồng tiếng nguyên phim. Chi tiết bắt buộc tại **Mục 22**, tiêu chí đo tại **Mục 15.4–15.6**.
+7. **AI tự tạo kịch bản review tiếng Việt** gồm dàn ý, lời kể nhiều phần, bình luận có căn cứ, liên kết nguồn và kiểm duyệt; không phải dịch/lồng tiếng nguyên phim. Chi tiết bắt buộc tại **Mục 2.5**, tiêu chí đo tại **Mục 15.4–15.6**.
 8. Cho phép người dùng duyệt/sửa kịch bản, chọn giọng đọc và nghe thử.
 9. Sinh voice Việt, ghép video minh họa theo timeline, trộn audio, xuất H.264/AAC MP4.
 10. Kiểm tra file đầu ra, theo dõi tiến trình, xử lý lỗi, lưu lịch sử và xuất báo cáo.
@@ -56,8 +56,143 @@
 ### 2.4. Ba điều kiện chất lượng bắt buộc ngay từ đầu
 
 1. **Định nghĩa "review hay":** rubric 5 tiêu chí × 0–2 điểm, thử ngưỡng tổng ≥8/10 và không tiêu chí = 0; đây **chỉ là giả thuyết đo P1**, không phải ngưỡng đạt đã được chứng minh. Critical claim sai hoặc thiếu quyền chặn phát hành bất kể tổng điểm. Chi tiết tại Mục 15.4.
-2. **Không để LLM tự chứng nhận claim:** bộ kiểm chứng không-LLM kiểm tra nguồn/timecode, exact/contains, truy hồi semantic similarity và rule contradictions **trước**; không có bằng chứng thì tự đặt INSUFFICIENT_EVIDENCE, không dùng similarity để nâng SUPPORTED. Chỉ reviewer hoặc deterministic rule được chứng minh cho loại claim hẹp mới xác nhận. Xem Mục 22.4, 22.6.
+2. **Không để LLM tự chứng nhận claim:** bộ kiểm chứng không-LLM kiểm tra nguồn/timecode, exact/contains, truy hồi semantic similarity và rule contradictions **trước**; không có bằng chứng thì tự đặt INSUFFICIENT_EVIDENCE, không dùng similarity để nâng SUPPORTED. Chỉ reviewer hoặc deterministic rule được chứng minh cho loại claim hẹp mới xác nhận. Xem Mục 2.5.4, 2.5.6.
 3. **Bộ chuẩn P0/P1:** một video EN có quyền, transcript nguồn và nghĩa Việt chuẩn, tối thiểu ba review Việt viết tay có phong cách, 10–15 câu hỏi diễn biến có đáp án/timecode, reviewer/lịch chấm và rubric phải có trước khi đo model. Không đạt thì P0/P1 BLOCKED; không hứa chất lượng P3/P4.
+
+### 2.5. PHÂN HỆ CỐT LÕI — AI TẠO KỊCH BẢN REVIEW PHIM
+
+> **MUST HAVE — KHÔNG PHẢI TÍNH NĂNG PHỤ.** Ứng dụng phải **tự động viết một kịch bản review phim mới bằng tiếng Việt từ nội dung phim** và chuyển kịch bản đó thành lời thuyết minh/video. Không được lấy việc dịch lời thoại, xuất phụ đề hay cho người dùng tự gõ kịch bản thay thế chức năng này. AI Script Studio là chức năng sản phẩm cốt lõi.
+
+#### 2.5.1. Mục đích và khác biệt với dịch phim
+
+- **Dịch phim:** chuyển nghĩa từng câu thoại từ ngôn ngữ nguồn sang tiếng Việt.
+- **Tóm tắt sự kiện:** xác định ai làm gì, lúc nào, ở đâu và vì sao theo dữ liệu nguồn.
+- **Tạo kịch bản review:** chủ động chọn và sắp xếp sự kiện để kể lại phim dễ hiểu, bổ sung cách dẫn chuyện, điểm nhấn, nhận xét/bình luận và đoạn kết. Không dịch nguyên thoại hoặc bịa thêm tình tiết.
+- Kịch bản được viết **sau khi** có story/evidence, **trước khi** tạo voice và dựng timeline.
+
+#### 2.5.2. Input và output bắt buộc
+
+**Đầu vào của tầng phân tích/audit:** source hash/timecode, transcript gốc, bản dịch Việt, scene, StoryEvent, evidence và lexicon thực thể. EvidenceStore giữ raw transcript và đoạn nguồn gốc.
+
+**Đầu vào duy nhất của ReviewScriptGenerator:** StoryEvent.description_vi có event_id, fact slots, entity lexicon đã duyệt, mức spoiler, cấu hình văn phong, và quote block được đánh dấu có nguồn. **Không đưa transcript.text_original hay translation.text_vi thô vào prompt viết review**; chỉ ClaimAuditService có quyền truy vấn chúng ở bước kiểm chứng. Mỗi câu FACT phải trỏ tối thiểu một event_ref và evidence_ref; câu nhận xét phải gắn OPINION, quote phải có quote_id. Không có chứng cứ thì INSUFFICIENT_EVIDENCE, không tự chấp nhận.
+
+**Đầu ra:**
+1. review_outline.json — dàn ý phân phần có liên kết source event/evidence.
+2. review_script.json — section, paragraph, nội dung lời dẫn tiếng Việt, claims và dấu thời gian tham khảo.
+3. review_script.md — bản kịch bản có thể đọc, sửa, sao chép và xuất tệp.
+4. script_validation.json — mệnh đề có chứng cứ, chưa đủ chứng cứ, mâu thuẫn, lặp, sai nhân vật hoặc lệch spoiler.
+5. script_revision_manifest.json — model ID/revision/hash, source/config hash, version và reviewer decision.
+6. voice_script.json — lời dẫn đã duyệt, tách câu để gửi TTS, không chứa ghi chú dựng phim.
+
+#### 2.5.3. Tùy chọn người dùng
+
+| Thuộc tính | Khả năng phải cung cấp |
+|---|---|
+| Kiểu review | Kể toàn bộ cốt truyện; recap có bình luận; phân tích nhân vật/chi tiết; giới thiệu không spoil |
+| Giọng văn | Kể chuyện hấp dẫn; khách quan; cảm xúc; phân tích sâu; hài hước có kiểm soát |
+| Cấu trúc | Hook → giới thiệu/bối cảnh → xung đột → biến cố → cao trào → kết (nếu được spoil) → bình luận |
+| Thời lượng | Tự động theo diễn biến hoặc do người dùng đặt mục tiêu/khoảng phút |
+| Mức spoiler | Không spoil; spoil có giới hạn; full recap |
+| Bình luận | Mức độ phân tích/nhận xét, tách ý kiến chủ quan khỏi tình tiết đã xác minh |
+| Sự kiện | Cho người dùng giữ/bỏ/chuyển thứ tự những sự kiện được chọn |
+| Ngôn ngữ | Review script luôn là tiếng Việt; giữ bản nguồn và bản dịch riêng |
+
+**Giới hạn sáng tạo:** AI được diễn đạt hấp dẫn và phân tích nhưng không được tự coi phỏng đoán là tình tiết phim. Tên riêng và quan hệ nhân vật phải nhất quán.
+
+#### 2.5.4. Quy trình Review Script Generator
+
+1. **Story Grounding:** đọc story events + evidence và ghép nhân vật/sự kiện, xử lý hồi tưởng và những đoạn chưa chắc chắn.
+2. **Narrative Planning:** chọn các diễn biến cần giữ, nhóm chương, sắp xếp thứ tự kể, thiết kế hook/cao trào/kết và tạo outline JSON trước.
+3. **Section Generation:** model local viết từng chương theo evidence/chính sách spoiler; không nhét cả phim dài vào một prompt rồi giả định model nhớ hết.
+4. **Consistency Check:** kiểm tra trùng lặp, chuyển đoạn, nhân vật, thứ tự nguyên nhân–kết quả, thuật ngữ và mâu thuẫn giữa các chương.
+5. **Claim Audit — không-LLM trước:** mỗi claim trỏ source SHA, timecode và đoạn chứng cứ/frame hash; schema/source bounds và deterministic rules kiểm tra phủ định, nhân vật, chronology. **Name grounding bắt buộc:** mọi danh từ riêng trong narration cần map vào entity lexicon từ nguồn (canonical, alias, phiên âm tiếng Việt, evidence refs). Tên lạ, alias chưa duyệt, hoặc NER mơ hồ → INSUFFICIENT_EVIDENCE + reviewer cảnh báo; không được tự đổi tên. Exact/contains chỉ xác nhận candidate quote; semantic similarity chỉ truy hồi nguồn; không có support hoặc chỉ similarity → INSUFFICIENT_EVIDENCE; mâu thuẫn → FLAG_CONTRADICTION. Chỉ người duyệt hoặc rule deterministic được chứng minh cho loại claim hẹp mới cấp SUPPORTED. Test phản ví dụ: tên bịa, alias hợp lệ, đảo phủ định, sai nhân vật, SHA đổi.
+6. **Polish for Voice:** viết tự nhiên để đọc thành tiếng; điều chỉnh chỗ ngắt nghỉ, số và cách phát âm tên riêng; không thay đổi sự kiện.
+7. **Human Review:** người dùng duyệt outline/kịch bản, xem cảnh gốc, sửa tay hoặc yêu cầu viết lại một phần.
+8. **Duration Validation:** ước lượng bằng độ dài chữ, sau đó đo thời lượng WAV do TTS tạo thật; nếu lệch, rút/gia tăng nội dung có kiểm soát và duyệt lại.
+9. **Version & Handoff:** chỉ kịch bản đã APPROVED đúng revision/hash được đưa sang VieNeu-TTS và timeline; mọi thay đổi nội dung/nguồn quan trọng làm mất hiệu lực duyệt cũ.
+
+#### 2.5.5. AI Script Studio — điều khiển phải có thật trên GUI
+
+- **Tạo dàn ý bằng AI:** sinh outline, hiển thị các sự kiện nguồn theo từng phần.
+- **Tạo kịch bản review bằng AI:** sinh lời dẫn tiếng Việt hoàn chỉnh nhiều đoạn/phần, hiển thị tiến trình thật.
+- **Viết lại đoạn:** dài/ngắn hơn, thay đổi giọng kể, tăng bình luận nhưng chỉ dựa vào dữ kiện đã có.
+- **Kiểm tra nội dung:** hiển thị claims được hỗ trợ, nguồn còn thiếu, chỗ có mâu thuẫn.
+- **Xem cảnh gốc:** chọn câu kịch bản để phát phim tại timestamp tham chiếu.
+- **Chỉnh sửa và lưu phiên bản:** Undo/Redo, so sánh revision, autosave, export Markdown/TXT.
+- **Duyệt kịch bản:** ghi reviewer, hash, cấu hình, thời điểm và evidence set.
+- **Chuyển sang tạo giọng đọc:** chỉ bật sau khi đạt review gate; TTS chỉ đọc lời dẫn, không đọc notes/JSON.
+
+**Bố cục đề xuất:** trái = outline + event list; giữa = trình soạn kịch bản Việt; phải = nguồn chứng cứ/cảnh gốc và cảnh báo fact; trên = style/spoiler/duration; dưới = phiên bản/approval + Voice Studio.
+
+#### 2.5.6. Kiến trúc phần mềm riêng cho phân hệ
+
+| Module | Chức năng | Sử dụng gì có sẵn |
+|---|---|---|
+| StoryPackBuilder | Chọn events và evidence, rút gọn theo ngữ cảnh | Tự viết |
+| ReviewNarrativePlanner | Dàn ý và chiến lược kể chuyện | Tự viết, gọi LLM local |
+| ReviewScriptGenerator | Viết từng phần, ghép review dài | Tự viết adapter trên llama.cpp |
+| **ClaimAuditService** | **Non-LLM first:** kiểm tra evidence refs, nguồn/timecode, exact/contains cho quote, semantic retrieval, rules phủ định/tên/chronology; NO_SUPPORT → INSUFFICIENT_EVIDENCE; conflict → human review | Tự viết deterministic validators + embeddings để tìm nguồn + human reviewer; **LLM không được tự cấp SUPPORTED** |
+| ScriptRevisionStore | Lưu version, diff, hash, duyệt | SQLite/JSON |
+| ScriptStudioPage | Editor và nút sinh/viết lại/duyệt | PySide6 |
+| NarrationHandoff | Chia lời dẫn, giữ pronunciation map và script hash | VieNeu-TTS ở bước sau |
+
+**Model text — rủi ro then chốt:** llama.cpp là runtime, Qwen text 4B/8B chỉ là ứng viên cần benchmark **khả năng viết review Việt dài, không lặp, đúng diễn biến**. P1 dùng 03 bài review mẫu + rubric (Mục 15.4) và 10–15 câu hỏi diễn biến, không giả định 8B đủ tốt. VRAM của model GGUF còn tính KV-cache và runtime; một heavy GPU model tại một thời điểm. Nếu P1 thất bại, giảm phạm vi review ngắn hoặc tăng biên tập thủ công, không ép P3 PASS.
+
+**Chú ý:** Không có thư viện nào trong danh sách GitHub thay thế trọn vẹn lõi hiểu phim → chọn sự kiện → viết review mới → audit tính đúng. Đây là phần dự án phải tự thiết kế và kiểm thử.
+
+#### 2.5.7. Hợp đồng dữ liệu kịch bản (mẫu thiết kế, KHÔNG phải đầu ra AI đã chạy)
+
+~~~json
+{
+  "schema_version": "review_script_v1",
+  "project_id": "PRJ_DEMO",
+  "review_language": "vi",
+  "style": "ke_chuyen_loi_cuon",
+  "spoiler_policy": "full_recap",
+  "target_duration_sec": null,
+  "status": "NEEDS_REVIEW",
+  "sections": [
+    {
+      "section_id": "SEC_001",
+      "role": "hook",
+      "narration_vi": "Nội dung được tạo sau khi có bằng chứng.",
+      "event_refs": ["EV_001"],
+      "evidence_refs": ["EVID_001"],
+      "source_spans_ms": [{"start": 1000, "end": 8000}],
+      "claim_refs": ["CL_001"],
+      "claim_audit_state": "INSUFFICIENT_EVIDENCE"
+    }
+  ],
+  "approved_script_sha256": null
+}
+~~~
+
+#### 2.5.8. Kiểm thử và nghiệm thu bắt buộc
+
+- Với phim truyện ngắn tiếng Anh có quyền dài 3–10 phút trong golden set P0/P1: tự tạo được **outline và kịch bản review Việt nhiều đoạn đủ mở–thân–kết** từ transcript + events + cảnh/video có chứng cứ, không phải bản dịch lời thoại. **Không bắt buộc VLM tự hiểu phim ở P3** nếu reviewer đã xác nhận scene/events.
+- Các biến cố/nhân vật chính không bị thay đổi, thứ tự nhân quả hợp lý, tình tiết không chắc chắn hiện cảnh báo và có source timestamps.
+- Nút viết lại **một đoạn** không làm mất các đoạn khác hoặc giả mạo evidence.
+- Đổi style/độ dài/spoiler cho kết quả đáp ứng cấu hình; nếu giới hạn không khả thi, phải báo chứ không bỏ bừa sự kiện trọng yếu.
+- Editor xem nguồn và sửa duyệt, phiên bản phê duyệt có hash; sửa sau duyệt buộc duyệt lại phần bị ảnh hưởng.
+- Voice TTS nhận đúng lời dẫn Việt và MP4 cuối có tiếng review nghe được.
+- Reviewer có tên và lịch chấm đọc kịch bản, đối chiếu nguồn và chấm theo **rubric 5 tiêu chí ×0–2** Mục 15.4; ngưỡng thử **≥8/10, không điểm 0** và target overlap **≤5% 4-gram** chỉ là đề xuất trước baseline. **4-gram so script Việt với bản dịch transcript Việt, không so với transcript EN trực tiếp**; cả ba review người viết phải đo để hiệu chỉnh false positives.
+- Bộ 10–15 câu hỏi diễn biến có đáp án/timecode được dùng để phát hiện thiếu hoặc sai tình tiết. Critical claim mâu thuẫn, thiếu reviewer hoặc thiếu quyền thì BLOCKED, bất kể điểm rubric.
+- Nếu model không đạt chất lượng, báo BLOCKED/NEEDS_REVIEW; chỉnh StoryPack/section, giới hạn review ngắn 3–5 phút hoặc xin quyền thử model khác; không thay model hoặc hạ ngưỡng âm thầm.
+
+#### 2.5.9. Điều chỉnh mức ưu tiên triển khai
+
+- **P0 (điều kiện bắt buộc):** video EN có quyền + reviewer/lịch, 03 kịch bản VI viết tay, transcript/timecodes, bản dịch VI gold và 10–15 QA câu hỏi, rubric; chốt hình thức phân phối và owners.
+- **P1:** spike sinh outline → script review VI từ gold events, benchmark LLM/RAM/VRAM, rubric và overlap 4-gram đã hiệu chuẩn; ClaimAudit không-LLM phải có phản chứng trước P3.
+- **P2:** viết StoryPackBuilder, ReviewNarrativePlanner, ReviewScriptGenerator, ClaimAuditService **non-LLM first** và schema/revision tests.
+- **P3:** chỉ đạt vertical-slice khi **script review AI tạo thật vượt ngưỡng rubric đã chốt tại P1**, có reviewer approval, voice và MP4 có hình/tiếng cùng rights/claims hợp lệ.
+- **P4:** giao diện AI Script Studio phải điều khiển được các engine thật từ tạo dàn ý đến xuất kịch bản/duyệt.
+- **P5/P6:** benchmark review đa ngôn ngữ/phim dài, kiểm soát nhân vật, độ phủ và đóng gói Windows.
+
+**Definition of Done bổ sung:** Ứng dụng KHÔNG đạt MVP nếu chỉ có nút nhập kịch bản thủ công, dịch phụ đề, một câu demo, hoặc MP4 có TTS nhưng chưa có kịch bản review mới được tạo từ nội dung phim. **ENGINE_OK ≠ PRODUCT_E2E_OK ≠ RELEASE_READY**; rubric không đạt, thiếu reviewer/golden set, thiếu quyền hoặc unsupported critical claim đều NO-GO. Đây là kế hoạch đề xuất, **không cam kết chất lượng P3/P4 trước P1**.
+
+---
+
+**Ghi nhận cập nhật:** Mục 2.5 là phân hệ cốt lõi có UI, dữ liệu, workflow, audit không-LLM, rubric, reviewer và kiểm thử. Bản hiệu chỉnh này chỉ cập nhật kế hoạch; chưa lập trình hoặc chạy AI. Các ngưỡng chất lượng, license, runtime và model vẫn phải được P0/P1 kiểm chứng trước khi cam kết P3/P4.
 
 ## 3. LỰA CHỌN CÁCH XÂY DỰNG
 
@@ -179,7 +314,9 @@ Mỗi adapter nhận input đã validate, trả output có version và thông ti
 | TranscriptSegment | id, source_id, audio_stream, start_ms, end_ms, text_original, language, model_ref |
 | TranslationSegment | id, source_segment_ids, text_vi, status, model_ref, reviewer_note |
 | VisualObservation | id, shot_id, frame_pts_ms, frame_sha, description, source_type, confidence, review_status |
-| StoryEvent | id, source_spans, characters, description_vi, causal_links, evidence_refs, uncertainty |
+| StoryEvent | event_id, description_vi (sanitized), character_entity_ids, causal_links, source_spans, evidence_refs, uncertainty, provenance_sha |
+| EvidenceRef | evidence_id, source_sha, source_span_ms, excerpt_original, translation_ref?, frame_sha?, access_role=audit_only |
+| EntityLexicon | entity_id, canonical, name_type, aliases_vi, transliterations, source_evidence_refs, reviewer_status |
 | ReviewClaim | id, script_span, claim_kind, evidence_refs, verified_status |
 | Narration | text_vi, script_revision, voice_ref, wav_path, wav_sha, duration_ms |
 | TimelineClip | source_id, source_in_ms, source_out_ms, output_in_ms, output_out_ms, rights_ref, loop_policy (default=forbidden), watermark_or_logo_rights |
@@ -198,7 +335,7 @@ Mỗi adapter nhận input đã validate, trả output có version và thông ti
 4. **Translate:** dịch Việt trên transcript, lưu hai lớp song song; cảnh báo chỗ bất định/tên riêng.
 5. **Visual:** PySceneDetect phát hiện scene bằng OpenCV/PyAV; FFmpeg tách proxy/frame khi cần. OCR/VLM là tùy chọn theo benchmark và quyền model, không bắt buộc VLM hiểu phim cho MVP. Với phim dài, chunk **theo scene**, giữ source PTS và overlap kiểm soát.
 6. **Story (map–reduce):** map từng chunk thành event + evidence/timestamp, deduplicate các event do chunk overlap, reduce thành story graph chung với nhân vật/alias, chronology/flashback và uncertainty; người dùng kiểm tra các mâu thuẫn. Không đưa toàn bộ phim dài vào một prompt.
-7. **Generate Review Script (PHÂN HỆ BẮT BUỘC):** từ StoryEvent + source evidence, AI local xây dàn ý, viết từng phần kịch bản review tiếng Việt có mở bài, kể diễn biến, bình luận, kết và liên kết mốc phim; người dùng chọn phong cách, độ dài, spoiler, sửa/viết lại từng đoạn. Kiểm chứng claim quan trọng trước duyệt. Xem đặc tả chi tiết tại **Mục 22**.
+7. **Generate Review Script (PHÂN HỆ BẮT BUỘC):** từ StoryEvent + source evidence, AI local xây dàn ý, viết từng phần kịch bản review tiếng Việt có mở bài, kể diễn biến, bình luận, kết và liên kết mốc phim; người dùng chọn phong cách, độ dài, spoiler, sửa/viết lại từng đoạn. Kiểm chứng claim quan trọng trước duyệt. Xem đặc tả chi tiết tại **Mục 2.5**.
 8. **Approve:** người dùng chỉnh sửa và duyệt script; khóa revision để tạo audio nhất quán.
 9. **Narrate:** chạy VieNeu-TTS, kiểm tra WAV và thời lượng, cho nghe thử/sửa phát âm.
 10. **Edit:** tìm clip theo event; hard filter quyền footage; tạo timeline từ EDL/OTIO; cho phép chỉnh sửa thủ công.
@@ -217,7 +354,7 @@ Mỗi adapter nhận input đã validate, trả output có version và thông ti
 | Import Media | Chọn video, xem audio/subtitle, quyền | Probe đúng dữ liệu thật |
 | Analysis | Player nguồn + transcript gốc/dịch Việt + scene list | Click câu/scene seek đúng mốc |
 | Story Board | Sự kiện, nhân vật, mốc phim, bằng chứng | Chỉnh/sửa evidence được |
-| **AI Script Studio — Tạo kịch bản review** | **Tạo kịch bản tự động** từ sự kiện đã phân tích; cấu hình phong cách/độ dài/spoiler; dàn ý, mở bài, diễn biến, bình luận, kết; viết lại từng phần, xem nguồn và duyệt | **Sinh được review Việt nhiều đoạn thật**, lưu revision + evidence links, kiểm tra critical claims và invalidate job phụ thuộc; chi tiết Mục 22 |
+| **AI Script Studio — Tạo kịch bản review** | **Tạo kịch bản tự động** từ sự kiện đã phân tích; cấu hình phong cách/độ dài/spoiler; dàn ý, mở bài, diễn biến, bình luận, kết; viết lại từng phần, xem nguồn và duyệt | **Sinh được review Việt nhiều đoạn thật**, lưu revision + evidence links, kiểm tra critical claims và invalidate job phụ thuộc; chi tiết Mục 2.5 |
 | Voice Studio | Chọn giọng, phát thử, nghe WAV | TTS real local và audio playback |
 | Timeline Editor | Clip bins, preview, cắt và bố trí cảnh | Timeline đi vào FFmpeg render |
 | Export & QA | Preset, tiến độ, playback MP4, báo lỗi | H.264/AAC có tiếng, được người duyệt |
@@ -440,9 +577,6 @@ Thiếu video có quyền/reviewer/ba review mẫu thì **không được tuyên
 | **Không có video EN mẫu có quyền** | **Cao — chặn P0/P1 quality** | P0 phải giao 1 source 3–10 phút, SHA, quyền analysis và reuse; không dùng phim ngoài chưa được phép |
 | **Thiếu reviewer hoặc 03 bài review gold** | **Cao — chặn P0/P1 quality** | Chốt reviewer, lịch chấm, 3 phong cách review và 10–15 câu hỏi từ P0; reviewer sign-off |
 | **ClaimAudit dùng LLM tự xác nhận** | **Rất cao** | Exact/contains, semantic retrieval và rule checks không-LLM; không đủ evidence tự INSUFFICIENT_EVIDENCE; reviewer quyết định |
-| **Không có video EN mẫu có quyền** | **Cao — chặn P0/P1 quality** | P0 phải giao 1 source 3–10 phút, SHA, quyền analysis và reuse; không dùng phim ngoài chưa được phép |
-| **Thiếu reviewer hoặc 03 bài review gold** | **Cao — chặn P0/P1 quality** | Chốt reviewer, lịch chấm, 3 phong cách review và 10–15 câu hỏi từ P0; reviewer sign-off |
-| **ClaimAudit dùng LLM tự xác nhận** | **Rất cao** | Exact/contains, semantic retrieval và rule checks không-LLM; không đủ evidence tự INSUFFICIENT_EVIDENCE; reviewer quyết định |
 | File video có bản quyền không hợp lệ | Rất cao | Rights intake và clip-filter |
 | Giấy phép mô hình/code cản đóng gói | Cao | License audit trước download/integration |
 | GUI trông xong nhưng pipeline vẫn giả lập | Rất cao | Product E2E bắt buộc ở P3 |
@@ -505,142 +639,3 @@ Ngày tra cứu: **07/11/2026**. Các đường dẫn là nguồn upstream/giớ
 - pyVideoTrans (chỉ tham khảo, GPL-3.0) — https://github.com/jianchang512/pyvideotrans
 
 ---
-
-## 22. PHÂN HỆ CỐT LÕI — AI TỰ ĐỘNG TẠO KỊCH BẢN REVIEW PHIM (HIỆU CHỈNH THEO PHẢN BIỆN)
-
-> **MUST HAVE — KHÔNG PHẢI TÍNH NĂNG PHỤ.** Ứng dụng phải **tự động viết một kịch bản review phim mới bằng tiếng Việt từ nội dung phim** và chuyển kịch bản đó thành lời thuyết minh/video. Không được lấy việc dịch lời thoại, xuất phụ đề hay cho người dùng tự gõ kịch bản thay thế chức năng này. AI Script Studio là chức năng sản phẩm cốt lõi.
-
-### 22.1. Mục đích và khác biệt với dịch phim
-
-- **Dịch phim:** chuyển nghĩa từng câu thoại từ ngôn ngữ nguồn sang tiếng Việt.
-- **Tóm tắt sự kiện:** xác định ai làm gì, lúc nào, ở đâu và vì sao theo dữ liệu nguồn.
-- **Tạo kịch bản review:** chủ động chọn và sắp xếp sự kiện để kể lại phim dễ hiểu, bổ sung cách dẫn chuyện, điểm nhấn, nhận xét/bình luận và đoạn kết. Không dịch nguyên thoại hoặc bịa thêm tình tiết.
-- Kịch bản được viết **sau khi** có story/evidence, **trước khi** tạo voice và dựng timeline.
-
-### 22.2. Input và output bắt buộc
-
-**Đầu vào:** source ID/hash và timecode, transcript gốc, bản nghĩa Việt nếu nguồn không phải VI, shot/scene, nhân vật, story events, quan hệ nguyên nhân–kết quả, evidence IDs, phần chưa chắc chắn; cấu hình phong cách và chính sách spoiler từ người dùng.
-
-**Đầu ra:**
-1. review_outline.json — dàn ý phân phần có liên kết source event/evidence.
-2. review_script.json — section, paragraph, nội dung lời dẫn tiếng Việt, claims và dấu thời gian tham khảo.
-3. review_script.md — bản kịch bản có thể đọc, sửa, sao chép và xuất tệp.
-4. script_validation.json — mệnh đề có chứng cứ, chưa đủ chứng cứ, mâu thuẫn, lặp, sai nhân vật hoặc lệch spoiler.
-5. script_revision_manifest.json — model ID/revision/hash, source/config hash, version và reviewer decision.
-6. voice_script.json — lời dẫn đã duyệt, tách câu để gửi TTS, không chứa ghi chú dựng phim.
-
-### 22.3. Tùy chọn người dùng
-
-| Thuộc tính | Khả năng phải cung cấp |
-|---|---|
-| Kiểu review | Kể toàn bộ cốt truyện; recap có bình luận; phân tích nhân vật/chi tiết; giới thiệu không spoil |
-| Giọng văn | Kể chuyện hấp dẫn; khách quan; cảm xúc; phân tích sâu; hài hước có kiểm soát |
-| Cấu trúc | Hook → giới thiệu/bối cảnh → xung đột → biến cố → cao trào → kết (nếu được spoil) → bình luận |
-| Thời lượng | Tự động theo diễn biến hoặc do người dùng đặt mục tiêu/khoảng phút |
-| Mức spoiler | Không spoil; spoil có giới hạn; full recap |
-| Bình luận | Mức độ phân tích/nhận xét, tách ý kiến chủ quan khỏi tình tiết đã xác minh |
-| Sự kiện | Cho người dùng giữ/bỏ/chuyển thứ tự những sự kiện được chọn |
-| Ngôn ngữ | Review script luôn là tiếng Việt; giữ bản nguồn và bản dịch riêng |
-
-**Giới hạn sáng tạo:** AI được diễn đạt hấp dẫn và phân tích nhưng không được tự coi phỏng đoán là tình tiết phim. Tên riêng và quan hệ nhân vật phải nhất quán.
-
-### 22.4. Quy trình Review Script Generator
-
-1. **Story Grounding:** đọc story events + evidence và ghép nhân vật/sự kiện, xử lý hồi tưởng và những đoạn chưa chắc chắn.
-2. **Narrative Planning:** chọn các diễn biến cần giữ, nhóm chương, sắp xếp thứ tự kể, thiết kế hook/cao trào/kết và tạo outline JSON trước.
-3. **Section Generation:** model local viết từng chương theo evidence/chính sách spoiler; không nhét cả phim dài vào một prompt rồi giả định model nhớ hết.
-4. **Consistency Check:** kiểm tra trùng lặp, chuyển đoạn, nhân vật, thứ tự nguyên nhân–kết quả, thuật ngữ và mâu thuẫn giữa các chương.
-5. **Claim Audit — không-LLM trước:** claim phải trỏ evidence_refs tới media SHA + timestamp + đoạn text nguồn/frame hash. Deterministic validators kiểm tra schema/source bounds, exact/contains (chỉ cho claim trích lời), rule về nhân vật/chronology/phủ định; semantic similarity embedding **chỉ truy hồi candidate evidence**. Nếu không có nguồn hoặc chỉ có similarity → tự INSUFFICIENT_EVIDENCE; nếu có dấu hiệu xung đột → FLAG_CONTRADICTION và human review. LLM chỉ đề xuất/diễn giải, **không được tự set SUPPORTED**. Reviewer duyệt trên nguồn thật và ghi người duyệt, revision, evidence SHA.
-6. **Polish for Voice:** viết tự nhiên để đọc thành tiếng; điều chỉnh chỗ ngắt nghỉ, số và cách phát âm tên riêng; không thay đổi sự kiện.
-7. **Human Review:** người dùng duyệt outline/kịch bản, xem cảnh gốc, sửa tay hoặc yêu cầu viết lại một phần.
-8. **Duration Validation:** ước lượng bằng độ dài chữ, sau đó đo thời lượng WAV do TTS tạo thật; nếu lệch, rút/gia tăng nội dung có kiểm soát và duyệt lại.
-9. **Version & Handoff:** chỉ kịch bản đã APPROVED đúng revision/hash được đưa sang VieNeu-TTS và timeline; mọi thay đổi nội dung/nguồn quan trọng làm mất hiệu lực duyệt cũ.
-
-### 22.5. AI Script Studio — điều khiển phải có thật trên GUI
-
-- **Tạo dàn ý bằng AI:** sinh outline, hiển thị các sự kiện nguồn theo từng phần.
-- **Tạo kịch bản review bằng AI:** sinh lời dẫn tiếng Việt hoàn chỉnh nhiều đoạn/phần, hiển thị tiến trình thật.
-- **Viết lại đoạn:** dài/ngắn hơn, thay đổi giọng kể, tăng bình luận nhưng chỉ dựa vào dữ kiện đã có.
-- **Kiểm tra nội dung:** hiển thị claims được hỗ trợ, nguồn còn thiếu, chỗ có mâu thuẫn.
-- **Xem cảnh gốc:** chọn câu kịch bản để phát phim tại timestamp tham chiếu.
-- **Chỉnh sửa và lưu phiên bản:** Undo/Redo, so sánh revision, autosave, export Markdown/TXT.
-- **Duyệt kịch bản:** ghi reviewer, hash, cấu hình, thời điểm và evidence set.
-- **Chuyển sang tạo giọng đọc:** chỉ bật sau khi đạt review gate; TTS chỉ đọc lời dẫn, không đọc notes/JSON.
-
-**Bố cục đề xuất:** trái = outline + event list; giữa = trình soạn kịch bản Việt; phải = nguồn chứng cứ/cảnh gốc và cảnh báo fact; trên = style/spoiler/duration; dưới = phiên bản/approval + Voice Studio.
-
-### 22.6. Kiến trúc phần mềm riêng cho phân hệ
-
-| Module | Chức năng | Sử dụng gì có sẵn |
-|---|---|---|
-| StoryPackBuilder | Chọn events và evidence, rút gọn theo ngữ cảnh | Tự viết |
-| ReviewNarrativePlanner | Dàn ý và chiến lược kể chuyện | Tự viết, gọi LLM local |
-| ReviewScriptGenerator | Viết từng phần, ghép review dài | Tự viết adapter trên llama.cpp |
-| **ClaimAuditService** | **Non-LLM first:** kiểm tra evidence refs, nguồn/timecode, exact/contains cho quote, semantic retrieval, rules phủ định/tên/chronology; NO_SUPPORT → INSUFFICIENT_EVIDENCE; conflict → human review | Tự viết deterministic validators + embeddings để tìm nguồn + human reviewer; **LLM không được tự cấp SUPPORTED** |
-| ScriptRevisionStore | Lưu version, diff, hash, duyệt | SQLite/JSON |
-| ScriptStudioPage | Editor và nút sinh/viết lại/duyệt | PySide6 |
-| NarrationHandoff | Chia lời dẫn, giữ pronunciation map và script hash | VieNeu-TTS ở bước sau |
-
-**Model text — rủi ro then chốt:** llama.cpp là runtime, Qwen text 4B/8B chỉ là ứng viên cần benchmark **khả năng viết review Việt dài, không lặp, đúng diễn biến**. P1 dùng 03 bài review mẫu + rubric (Mục 15.4) và 10–15 câu hỏi diễn biến, không giả định 8B đủ tốt. VRAM của model GGUF còn tính KV-cache và runtime; một heavy GPU model tại một thời điểm. Nếu P1 thất bại, giảm phạm vi review ngắn hoặc tăng biên tập thủ công, không ép P3 PASS.
-
-**Chú ý:** Không có thư viện nào trong danh sách GitHub thay thế trọn vẹn lõi hiểu phim → chọn sự kiện → viết review mới → audit tính đúng. Đây là phần dự án phải tự thiết kế và kiểm thử.
-
-### 22.7. Hợp đồng dữ liệu kịch bản (mẫu thiết kế, KHÔNG phải đầu ra AI đã chạy)
-
-~~~json
-{
-  "schema_version": "review_script_v1",
-  "project_id": "PRJ_DEMO",
-  "review_language": "vi",
-  "style": "ke_chuyen_loi_cuon",
-  "spoiler_policy": "full_recap",
-  "target_duration_sec": null,
-  "status": "NEEDS_REVIEW",
-  "sections": [
-    {
-      "section_id": "SEC_001",
-      "role": "hook",
-      "narration_vi": "Nội dung được tạo sau khi có bằng chứng.",
-      "event_refs": ["EV_001"],
-      "evidence_refs": ["EVID_001"],
-      "source_spans_ms": [{"start": 1000, "end": 8000}],
-      "claim_refs": ["CL_001"],
-      "claim_audit_state": "INSUFFICIENT_EVIDENCE"
-    }
-  ],
-  "approved_script_sha256": null
-}
-~~~
-
-### 22.8. Kiểm thử và nghiệm thu bắt buộc
-
-- Với phim truyện ngắn tiếng Anh có quyền dài 3–10 phút trong golden set P0/P1: tự tạo được **outline và kịch bản review Việt nhiều đoạn đủ mở–thân–kết** từ transcript + events + cảnh/video có chứng cứ, không phải bản dịch lời thoại. **Không bắt buộc VLM tự hiểu phim ở P3** nếu reviewer đã xác nhận scene/events.
-- Các biến cố/nhân vật chính không bị thay đổi, thứ tự nhân quả hợp lý, tình tiết không chắc chắn hiện cảnh báo và có source timestamps.
-- Nút viết lại **một đoạn** không làm mất các đoạn khác hoặc giả mạo evidence.
-- Đổi style/độ dài/spoiler cho kết quả đáp ứng cấu hình; nếu giới hạn không khả thi, phải báo chứ không bỏ bừa sự kiện trọng yếu.
-- Editor xem nguồn và sửa duyệt, phiên bản phê duyệt có hash; sửa sau duyệt buộc duyệt lại phần bị ảnh hưởng.
-- Voice TTS nhận đúng lời dẫn Việt và MP4 cuối có tiếng review nghe được.
-- Reviewer có tên và lịch chấm đọc kịch bản, đối chiếu nguồn và chấm theo **rubric 5 tiêu chí ×0–2** Mục 15.4; ngưỡng thử **≥8/10, không điểm 0** và target overlap **≤5% 4-gram** chỉ là đề xuất trước baseline. **4-gram so script Việt với bản dịch transcript Việt, không so với transcript EN trực tiếp**; cả ba review người viết phải đo để hiệu chỉnh false positives.
-- Bộ 10–15 câu hỏi diễn biến có đáp án/timecode được dùng để phát hiện thiếu hoặc sai tình tiết. Critical claim mâu thuẫn, thiếu reviewer hoặc thiếu quyền thì BLOCKED, bất kể điểm rubric.
-- Nếu model không đạt chất lượng, báo BLOCKED/NEEDS_REVIEW; chỉnh StoryPack/section, giới hạn review ngắn 3–5 phút hoặc xin quyền thử model khác; không thay model hoặc hạ ngưỡng âm thầm.
-
-### 22.9. Điều chỉnh mức ưu tiên triển khai
-
-- **P0 (điều kiện bắt buộc):** video EN có quyền + reviewer/lịch, 03 kịch bản VI viết tay, transcript/timecodes, bản dịch VI gold và 10–15 QA câu hỏi, rubric; chốt hình thức phân phối và owners.
-- **P1:** spike sinh outline → script review VI từ gold events, benchmark LLM/RAM/VRAM, rubric và overlap 4-gram đã hiệu chuẩn; ClaimAudit không-LLM phải có phản chứng trước P3.
-- **P2:** viết StoryPackBuilder, ReviewNarrativePlanner, ReviewScriptGenerator, ClaimAuditService **non-LLM first** và schema/revision tests.
-- **P3:** chỉ đạt vertical-slice khi **script review AI tạo thật vượt ngưỡng rubric đã chốt tại P1**, có reviewer approval, voice và MP4 có hình/tiếng cùng rights/claims hợp lệ.
-- **P4:** giao diện AI Script Studio phải điều khiển được các engine thật từ tạo dàn ý đến xuất kịch bản/duyệt.
-- **P5/P6:** benchmark review đa ngôn ngữ/phim dài, kiểm soát nhân vật, độ phủ và đóng gói Windows.
-
-**Definition of Done bổ sung:** Ứng dụng KHÔNG đạt MVP nếu chỉ có nút nhập kịch bản thủ công, dịch phụ đề, một câu demo, hoặc MP4 có TTS nhưng chưa có kịch bản review mới được tạo từ nội dung phim. **ENGINE_OK ≠ PRODUCT_E2E_OK ≠ RELEASE_READY**; rubric không đạt, thiếu reviewer/golden set, thiếu quyền hoặc unsupported critical claim đều NO-GO. Đây là kế hoạch đề xuất, **không cam kết chất lượng P3/P4 trước P1**.
-
----
-
-**Ghi nhận cập nhật:** Mục 22 là phân hệ cốt lõi có UI, dữ liệu, workflow, audit không-LLM, rubric, reviewer và kiểm thử. Bản hiệu chỉnh này chỉ cập nhật kế hoạch; chưa lập trình hoặc chạy AI. Các ngưỡng chất lượng, license, runtime và model vẫn phải được P0/P1 kiểm chứng trước khi cam kết P3/P4.
-
-## 23. GHI CHÚ BÀN GIAO TÀI LIỆU ĐỘC LẬP
-
-Báo cáo là **một tài liệu kế hoạch duy nhất** tại đường dẫn đã nêu, phục vụ dự án greenfield độc lập. Không phụ thuộc mã nguồn hoặc kết quả nghiệm thu cũ. **Chưa được phép coi tài liệu là bằng chứng software/product đã đạt**; sản phẩm chỉ có thể nghiệm thu khi có review tiếng Việt thực sự, người chấm rubric độc lập, rights manifest và MP4 thuyết minh nghe/xem được.
-
-**Lịch sử chỉnh sửa:** v1.1 bổ sung AI Script Studio; v1.2 sửa chất lượng review/rubric, golden data/reviewer P0, ClaimAudit không-LLM trước, timeline/loudness, Windows GPU/runtime, licensing, phim dài scene-chunk map–reduce, P0–P6 Go/No-Go. Tài liệu này là hồ sơ kế hoạch chính được hiệu chỉnh trực tiếp tại đường dẫn gốc.
