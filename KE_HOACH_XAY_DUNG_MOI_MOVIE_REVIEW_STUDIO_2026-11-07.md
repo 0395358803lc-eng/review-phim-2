@@ -457,52 +457,69 @@ Một project chứa **source manifest, tracks, transcripts, translations, obser
 Không chốt phiên bản và không cài trước khi kiểm tra ma trận dependency/giấy phép. Có thể thay lựa chọn nếu spike chứng minh không phù hợp.
 
 
-## 13. LỘ TRÌNH XÂY DỰNG THEO CÁC BẢN GIAO ĐƯỢC
+## 13. LỘ TRÌNH, OWNER, NGÂN SÁCH VÀ ƯỚC LƯỢNG P0–P6
 
-Thời gian dưới đây là **trình tự** chứ không phải cam kết số ngày. Kết thúc một pha phải có sản phẩm/biên bản test quan sát được.
+**Trạng thái hiện tại: P0 BLOCKED**, do người chịu trách nhiệm, nguồn video có quyền, hai reviewer và golden set chưa được phê duyệt. Các mốc/effort dưới đây là **giả định để ước tính**, không phải cam kết thực hiện. T0 = ngày owner ký quyết định phát hành/quyền/nhân lực; nếu không có T0 thì các deadline vẫn là TBD.
 
-| Pha | Phạm vi | Bàn giao bắt buộc | Điều kiện chuyển pha |
-|---|---|---|---|
-| **P0 — Khóa quyền/chuẩn chất lượng** | Trước khi cài model, chốt nội bộ/open-source/thương mại; chỉ định owner + lịch review | **01 video EN 3–10 phút có quyền**, SHA & rights manifest; reviewer/lịch; **03 review Việt viết tay**; transcript EN/timecode & nghĩa VI; 10–15 QA câu hỏi; rubric, candidate scorecard, license inventory | **BLOCKED nếu thiếu bất cứ mục bắt buộc về quyền, reviewer, review mẫu** |
-| **P1 — Engine spikes + baseline review** | FFmpeg/ASR/translation/scene/TTS/local LLM; **sinh review thực** từ story gold, test ClaimAudit non-LLM | Các phép đo WER/dịch, **rubric review 5×0–2**, tỷ lệ 4-gram với bản nghĩa Việt, kết quả QA 10–15 câu, model/VRAM/latency/rights/license | Reviewer chấm, owner **duyệt ngưỡng P3**; không đạt thì NO-GO cho cam kết P3/P4 |
-| P2 — Core skeleton | Domain schema, SQLite, worker, orchestrator, adapter contracts | Project tạo/mở lại; job chạy/nhật ký/checkpoint | GUI không bị treo; mock/test pass |
-| P3 — Real vertical slice | Video tiếng Anh 3–10 phút → script Việt **AI tự tạo theo rubric** → voice Việt → MP4 | MP4 thực và scorecard reviewer + claim/source/timecode + rights/hash/audio QC | **NO-GO nếu review Việt không đạt chuẩn đã hiệu chuẩn ở P1**, dù render PASS |
-| P4 — Guided desktop UI | Import → analyze → edit script → voice → preview → export | Toàn workflow chạy trong GUI | Không dùng script thủ công để đi hết quy trình |
-| P5 — Story + multilingual | Cảnh/hình, OCR, nhân vật, dịch EN/ZH/JA/KO/VI, sự kiện | Golden set nhiều ngôn ngữ, metrics, reviewer decisions | Chất lượng từng ngôn ngữ được chấm |
-| P6 — Reliability & release | Phim dài theo chunk, resume, Windows installer, offline audit | Báo cáo performance/security/license/UAT | Đạt Go/No-Go trước khi phân phối |
+| Giai đoạn | Deliverable và cổng chặn | Ước lượng (người-tuần) | Owner cần chỉ định (TBD) |
+|---|---|---:|---|
+| P0 | Xác nhận nội bộ/open-source/thương mại; 1 video EN 3–10 phút analysis+reuse; 3 review VI gold; 10–15 câu QA; 2 reviewer/lịch; rubric, voice/model license | 2–3 | Product, Rights, Editorial, QA, Legal |
+| **Spike 0 — trước media** | Thử local LLM text-only sinh review VI từ sanitized StoryEvent và 1 review tham chiếu | 0,4–0,6 (2–3 ngày công **nếu đầu vào sẵn**) | AI + Editorial |
+| **P1b — review quality ưu tiên** | Đo 3 review người viết và N review AI, name grounding, rubric/inter-rater, ngưỡng P3 | 2–3 | AI + hai reviewer |
+| **P1a — media baseline song song** | FFmpeg/scene/ASR CPU+GPU/dịch baseline/TTS và phương án B/rights/performance | 2–4 | Media + Windows + License |
+| P2 | Domain/6 JSON-MD contracts, ClaimAudit, GUI skeleton, SQLite migrations, CI, resource supervisor | 4–7 | Engineering + QA |
+| P3 | Video có quyền EN → script AI VI qua reviewer → WAV Việt → EDL clips → MP4 QC | 5–8 | AI + Media + Editorial |
+| P4 | Quy trình GUI hoàn chỉnh, sửa script/voice/timeline, reopen/pause/resume, QA | 5–8 | Desktop + QA |
+| P5 | Golden set theo ngôn ngữ, scene reliability; VLM chỉ sau benchmark | 7–12 | AI + Editorial |
+| P6 | Render phim dài theo segment, offline audit, clean Windows installer, licenses/recovery/release | 8–14 | Engineering + Release/Legal |
 
-**Nguyên tắc ưu tiên:** P0/P1 **phải chứng minh chất lượng kịch bản review Việt** trước P3/P4. P3 có trọng số cao hơn giao diện đẹp; GUI hoàn chỉnh nhưng không có MP4 review thật và scorecard reviewer không được coi là MVP. P4 GUI chỉ có thể đạt PRODUCT_E2E_OK khi P3 đã đủ bằng chứng.
+**P0–P4 ước tính 20–33 người-tuần**, bao gồm P1a + P1b và không cộng Spike 0 hai lần. Đây là **effort chưa chứng minh**, có thể thay đổi nhiều khi test local model/Windows. Owner lập lịch theo dependency, ví dụ P0 mục tiêu T0+2–3 tuần, P1a và P1b sau khi có fixture có thể song song; quyết định ngày thực phải được ký vào P0, không dùng bảng này làm deadline đã giao.
 
-## 14. KẾ HOẠCH THỬ NGHIỆM NHANH (SPIKE) THEO THỨ TỰ
+**Ba kịch bản nguồn lực (ước tính, chưa xét các khoảng chờ approval):**
+- **1 người 40 giờ/tuần:** khoảng 5–8,5 tháng công đến P4, khó phân vai reviewer độc lập; ưu tiên P0→Spike 0→P1b→P3 Guided, hoãn UX polish/VLM/P5/P6.
+- **1 người 20 giờ/tuần:** khoảng 10–17 tháng lịch để đến P4 nếu không vướng chặn; **đề xuất cắt P5/P6 và editor nâng cao**, chỉ làm EN→VI 1 fixture trước.
+- **Đội 2–3 người:** P1a/P1b song song, nhưng tổng effort không tự giảm; lịch thực tế phụ thuộc integration, reviewer và license. Cần tách quyền quyết định kỹ thuật và editorial dù có người kiêm nhiệm.
 
-### Spike A — Video ingest, detection và render
-- Dữ liệu: một video ngắn có hình, thoại và phụ đề thuộc quyền dự án.
-- Thực hiện: ffprobe, lấy scene cuts qua PySceneDetect, trim 2–3 đoạn bằng FFmpeg, ghép một WAV mẫu hợp lệ.
-- Pass: MP4 mở được trên Windows; có một video stream và một audio stream; duration và in/out khớp dự kiến.
+**Ngân sách theo công thức, cần nhập sau đo P0/P1:** nhân sự = giờ công × đơn giá; điện = (CPU+GPU+hệ thống công suất trung bình W) × giờ chạy / 1000 × giá/kWh; lưu trữ = proxy/cache GB-tháng + backup; trọng số/voice/commercial license; reviewer và chi phí kiểm thử; thêm **20–30% contingency giả định** để hoạch định. Hiện chưa có bảng giá/giờ chạy → **không đưa ra tổng tiền giả**. Spike 0 không miễn phí nếu phải tải model/thuê reviewer.
 
-### Spike B — Nhận tiếng Anh và dịch Việt
-- ASR Faster-Whisper giữ transcript tiếng Anh, timecode, language code.
-- So sánh Argos Translate với LLM local trên một tập câu có bản tham chiếu Việt.
-- Pass: không đảo nghĩa phủ định/tên người trong mẫu khó; kết quả gắn đúng span nguồn; người đánh giá có thể sửa.
+**Owner/deadline matrix bắt buộc ký trước P1:** Product owner, Rights owner, Dataset/Editorial lead, 2 QA reviewers, AI engineer, Windows/Media engineer, License/Release owner; vai trò có thể kiêm nhưng ghi rõ xung đột lợi ích. Mỗi P0 deliverable có owner, due date, trạng thái OPEN/BLOCKED/ACCEPTED và link bằng chứng. Tất cả hiện **TBD**.
 
-### Spike C — Viết review thật + rubric + Claim Audit độc lập
-- Input: **golden set P0** (video EN 3–10 phút có quyền, transcript/translation/events chuẩn, 03 bài review Việt viết tay, 10–15 câu hỏi diễn biến có source/timecode); reviewer đã được chỉ định.
-- Local LLM viết outline rồi review tiếng Việt theo section, có bình luận mới. Đo lặp/nhầm tên/sai logic và chấm 5 tiêu chí × 0–2; ngưỡng **≥8/10, không điểm 0** chỉ là đề xuất phải hiệu chuẩn.
-- Kiểm tra trùng **4-gram theo từ** với **bản dịch Việt transcript** (nếu nguồn là EN), chuẩn hóa Unicode/tokenizer và loại quote được chú thích; mốc **≤5% chỉ là giả thuyết thử**, phải đo cả 03 review mẫu người viết trước khi quyết định ngưỡng.
-- Bước Claim Audit **không-LLM trước**: exact/contains cho câu trích, semantic similarity để tìm nguồn chứ không tự SUPPORTED, no support → INSUFFICIENT_EVIDENCE, contradiction → human review. Test phản chứng tên nhân vật/đảo phủ định.
-- Pass chỉ khi reviewer có tên chấm rubric và mô tả lỗi; critical claims trái nguồn không được phép qua; lưu script revision/hash và review sheet. Fail → cải thiện StoryPack/sectioning hoặc giới hạn review 3–5 phút, không tô đẹp kết quả.
+**Cắt phạm vi theo cổng:** text-only không đạt → dừng GUI/OTIO/VLM, thử sectioning/model trong budget rồi Guided script 3–5 phút; voice license không hợp lệ → dùng TTS dự phòng có phép hoặc bản Guided giọng người dùng, không đóng gói trái phép; thiếu quyền footage → chỉ thử kỹ thuật text, không render clip; thiếu resource → không đặt mục tiêu phim 120 phút.
 
-### Spike D — Voice Việt và timeline
-- VieNeu sinh audio thật từ script đã duyệt.
-- Timeline planner chọn clip có quyền và FFmpeg mix audio Việt với hình.
-- Pass: người nghe nhận ra nội dung tiếng Việt trong MP4, tiếng đọc không bị mất, mốc phụ đề hợp lý.
+**Nguyên tắc:** ENGINE_OK ≠ PRODUCT_E2E_OK ≠ RELEASE_READY; P3 không thể PASS chỉ nhờ 1 MP4 khi script review không qua rubric, claims và reviewer.
 
-### Spike E — Offline/resource
-- Chặn Internet và DNS khi chạy pipeline đã chuẩn bị đầy đủ.
-- Quan sát RAM/VRAM, bộ nhớ đệm, thử thiếu file model, GPU OOM giả lập/được kiểm soát và crash recovery.
-- Pass: không outbound; thiếu model thì lỗi có hướng xử lý; output cũ không bị hỏng.
+## 14. SPIKE THEO GIÁ TRỊ THÔNG TIN — TEXT FIRST
 
-**Không làm:** tự động clone, tự tải trọng số, thay driver, sửa cài đặt hệ thống hoặc chạy trên phim chưa có quyền chỉ để hoàn tất spike.
+### 14.0. Spike 0 — Text-only sớm nhất
+
+**Câu hỏi quyết định:** mô hình local GGUF cỡ 4B/8B (hoặc model khác nếu được phép) có tạo kịch bản review tiếng Việt đúng và lôi cuốn không, trước khi đầu tư vào media pipeline? Ước lượng thử **2–3 ngày công nếu model, text có quyền, người chấm và máy đã sẵn**, không phải cam kết.
+
+- Đầu vào: một narrative public-domain/CC0 hoặc do chủ dự án tạo, rút thành **StoryEvent.description_vi + entity lexicon + evidence refs** và một review Việt mẫu có quyền. Không cần FFmpeg, ASR, CUDA GPU, GUI hay TTS. Model cần license/permission và có thể chạy CPU chậm; không tự download.
+- llama.cpp + text GGUF → outline → review nhiều section theo đúng **Mục 2.5.7**. Generator chỉ thấy sanitized events, không thấy toàn raw transcript (trừ block quote đã duyệt).
+- Đánh giá bằng rubric 5 tiêu chí, các câu factual phải gắn event, name grounding, câu OPINION phân biệt, lỗi lặp/đổi tên. Thử 2 prompt/sectioning nếu budget cho phép; log tài nguyên/model.
+- **Kết quả:** scorecard PASS/FAIL/INCONCLUSIVE và quyết định tiếp tục/cắt scope. Nếu kém, thử sửa StoryPack/prompt trong hạn mức; chưa được viện một mẫu để cam kết chất lượng rộng. Spike 0 chưa hoàn tất golden set/2 reviewer thì chỉ là feasibility, **không được gắn P1b GO**.
+
+### 14.1. P1b — Review Quality (ưu tiên, không chờ P1a)
+
+- Sử dụng **3 review người viết + video EN có quyền + transcript/bản nghĩa VI và StoryEvents gold**, 10–15 câu hỏi diễn biến, **5 câu hỏi về giá trị bình luận** và **2 reviewer độc lập**.
+- Hai reviewer chấm mù nhãn tác giả (human/AI) với rubric 5×0–2; ghi từng tiêu chí, điểm từng reviewer, raw agreement, quyết định giải quyết bất đồng; có thể báo kappa có điều kiện nhưng không khẳng định thống kê từ số mẫu nhỏ.
+- Report 4-gram raw, **entity-conditional** và tỷ lệ quote đã gắn nhãn tách riêng; đo cả 3 bài người và N lần sinh AI; so với bản dịch Việt transcript, không so với bản EN rồi tuyên bố không chép.
+- Negative tests: tên không có lexicon, alias hợp lệ, nhân vật trùng tên, đảo phủ định, không evidence, source SHA lệch; không cho LLM tự SUPPORTED.
+- **Một video n=1 chỉ là smoke/calibration**. Nếu muốn tuyên bố độ ổn định cần thêm ít nhất 1 video khác bối cảnh/thể loại có quyền và reviewer; không được tuyên bố tính tổng quát từ 8/10 một mẫu.
+
+### 14.2. P1a — Media, ASR, dịch, TTS (chạy song song P1b)
+
+- Probe và detect scene qua FFmpeg/PySceneDetect đúng vai trò; dựng thử clip có quyền. ASR Faster-Whisper EN, đo WER và timeline.
+- **CPU CTranslate2 INT8 là fallback ASR được thử chính thức**, GPU chỉ là acceleration khi CUDA 12/cuDNN 9 DLL và PATH được xác minh ở worker; có test cài sạch Windows **không có CUDA**.
+- **Argos Translate làm baseline rẻ nếu có package offline EN→VI có phép**; khi không khả dụng, so local LLM với bản nghĩa VI hiệu đính, ghi rõ Argos không chạy thay vì tự bỏ baseline.
+- Voice primary VieNeu-TTS v3 Turbo sau khi kiểm weights/voice license. **TTS phương án B** khảo sát một engine offline khác như Piper với giọng Việt/giấy phép đã kiểm; nếu không khả thi, giọng người dùng thu âm có quyền là lựa chọn Guided không thay cho yêu cầu auto-TTS khi phát hành. Không có giọng Việt phù hợp → P3 NO-GO cho workflow tự động.
+- Đo RAM/VRAM/time, thử offline không outbound, missing DLL/voice/weights, crash, codec và MP4 nghe được.
+
+### 14.3. Các cổng quyết định
+
+- **Spike 0** có thể làm trước khi P0 đầy đủ, chỉ khi text/model/rights hợp lệ và người chấm có thể tham gia; không nâng thành product-quality gate.
+- **P1b GO** đòi scorecards reviewer, ngưỡng hiệu chuẩn + 10–15 QA, kiểm tên và nguồn; **P1a GO** đòi media/ASR/translation/voice hợp quyền chạy trên máy. **P1 GO = P1a GO và P1b GO**; P2/P3 không nên bắt đầu nếu chất lượng text vẫn NO-GO.
+- Nâng ước lượng, chi phí, model choice và deadline từ số đo thực, ghi status; không viện test của một repo khác làm bằng chứng.
 
 ## 15. KIỂM THỬ VÀ NGHIỆM THU
 
