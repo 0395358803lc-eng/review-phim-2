@@ -228,7 +228,13 @@ ready_for_tts chỉ true khi script revision chính xác đã được duyệt, 
 | B. Tự viết toàn bộ AI và media | Kiểm soát tuyệt đối | Chi phí, thời gian và rủi ro rất cao | Không chọn |
 | **C. Greenfield + các engine tách biệt qua adapter** | Dễ thay model, dễ test, GUI độc lập, giữ chủ quyền sản phẩm | Phải tự xây pipeline, bằng chứng, timeline và QA | **ĐỀ XUẤT** |
 
-**Kết luận:** Chọn C. Có thể tham khảo cách tổ chức chức năng của các dự án khác, nhưng chỉ sao chép/ghép code khi giấy phép và nhu cầu kỹ thuật cho phép. Ưu tiên sử dụng các thư viện chuẩn và CLI/API chính thức thay vì copy từng module từ nhiều repository lớn.
+**Kết luận:** Chọn C. Có thể tham khảo workflow của dự án khác nhưng không thay sản phẩm review bằng phần mềm dịch/dubbing; chỉ dùng thư viện/CLI với quyền hợp lệ.
+
+### 3.1. Định vị và phép so sánh quyết định đầu tư
+
+**Giả thuyết giá trị:** ứng dụng desktop offline có workflow end-to-end, bằng chứng cho câu kịch bản, bản đồ clip có quyền, lịch sử chỉnh sửa/duyệt và MP4 thật. Đối thủ thực tế là người biên tập dùng LLM + FFmpeg + prompt tự soạn; chưa có bằng chứng rằng model local viết hay hơn dịch vụ cloud.
+
+Ở P1/P3, đo cùng nguồn có quyền cho hai quy trình: (A) làm thủ công với công cụ sẵn có và (B) Movie Review Studio. Báo cáo thời gian thao tác, số bước/số claim phải sửa, rubric chất lượng, giờ máy, điện, cost của reviewer, tỷ lệ hoàn thành và tính offline; không gửi source có quyền hạn chế lên cloud. Chỉ đầu tư P4–P6 khi owner thấy lợi ích thực qua số liệu, không dựa vào khẩu hiệu.
 
 ## 4. KIỂM TRA MÔI TRƯỜNG MÁY MỤC TIÊU
 
@@ -257,7 +263,8 @@ Danh mục kiểm tra nguồn công khai ngày 07/11/2026. **Giấy phép code**
 | Dịch offline | https://github.com/argosopentech/argos-translate | MIT/CC0 theo upstream | Baseline dịch để so với LLM | ỨNG VIÊN |
 | Local LLM runtime | https://github.com/ggml-org/llama.cpp | MIT | Chạy model text/VLM quantized | ỨNG VIÊN |
 | Vision-language | https://github.com/QwenLM/Qwen3-VL | Apache-2.0 cho repo | Hiểu khung hình/clip ngắn | CẦN SPIKE + MODEL LICENSE |
-| Tiếng Việt TTS | https://github.com/pnnbao97/VieNeu-TTS | Apache-2.0 cho repo | Tạo giọng đọc Việt local | CẦN SPIKE + VOICE LICENSE |
+| Tiếng Việt TTS chính | https://github.com/pnnbao97/VieNeu-TTS | Apache-2.0 cho repo (không đại diện weights) | Khảo sát v3 Turbo local | CẦN SPIKE + VOICE LICENSE |
+| TTS dự phòng ứng viên | https://github.com/OHF-Voice/piper1-gpl | GPL-3.0; voice weights có điều khoản riêng | Piper là phương án nghiên cứu, **chưa xác nhận có voice Việt/license phù hợp**; repo rhasspy/piper cũ đã archived | CẦN LICENSE + VOICE AUDIT |
 | Biểu diễn timeline | https://github.com/AcademySoftwareFoundation/OpenTimelineIO | Apache-2.0 | Chuẩn hóa clip/timing | ỨNG VIÊN |
 | Mã hóa & dựng video | https://ffmpeg.org/ | LGPL/GPL tùy build | Probe, trim, filter, mix, encode | CẦN LICENSE AUDIT |
 | GUI desktop | https://www.qt.io/development/qt-framework/python-bindings | LGPLv3/GPL/commercial tùy cách dùng | Giao diện PySide6 | CẦN LICENSE AUDIT |
@@ -401,8 +408,9 @@ Mỗi adapter nhận input đã validate, trả output có version và thông ti
 7. Chỉ sau khi đạt mới chuyển trạng thái ứng viên thành APPROVED_FOR_INTEGRATION.
 
 ### 10.2. Ưu tiên chọn công cụ
-- **Bắt buộc thử đầu:** FFmpeg, PySceneDetect, Faster-Whisper, llama.cpp, VieNeu.
-- **Thử song song nhưng có thể bỏ:** Argos Translate hoặc LLM dịch, PaddleOCR, Qwen3-VL.
+- **Thứ tự:** Spike 0 llama.cpp text-only trước; P1b thử chất lượng viết song song P1a thử FFmpeg, PySceneDetect, Faster-Whisper, dịch và giọng đọc. Không cài toàn bộ AI/media trước khi biết chất lượng viết.
+- **Baseline dịch P1a:** giữ Argos Translate để so sánh nếu package offline EN→VI được phép và khả dụng; khi không có gói hợp lệ, đo local translator so với bản dịch VI người hiệu đính, ghi rõ Argos **chưa chạy**, không bỏ baseline mà không thay thế.
+- **Tùy chọn:** PaddleOCR, Qwen3-VL; không bắt buộc P3.
 - **Thêm khi timeline phức tạp:** OpenTimelineIO.
 - **Không cần thêm ngay:** diarization phức tạp, vector database, nhiều model VLM, GPU deep learning framework lớn.
 
@@ -456,6 +464,20 @@ Một project chứa **source manifest, tracks, transcripts, translations, obser
 
 Không chốt phiên bản và không cài trước khi kiểm tra ma trận dependency/giấy phép. Có thể thay lựa chọn nếu spike chứng minh không phù hợp.
 
+
+### 12.1. Pin phiên bản, CI, build và migration database
+
+- Pin Python dependencies bằng lockfile + SHA và model/voice/GGUF/mmproj/FFmpeg/CTranslate2/CUDA/cuDNN bằng version, source và manifest có checksum/license; input revision của từng job có ảnh hưởng đến invalidation.
+- **CI:** synthetic fixture không chứa phim thật trên GitHub Actions hoặc runner local: Ruff, pytest unit/domain/contract, schema tests cho 6 output, negative tests ClaimAudit, test Windows path Unicode, database migrations; không đưa source media/voice riêng tư hoặc model weights lên CI công khai. GPU integration/real-media tests cần runner Windows được cho phép và báo cáo riêng.
+- **SQLite migrations:** giữ schema_version hoặc PRAGMA user_version, migration transaction + backup trước nâng cấp, test nâng cấp từ ít nhất một bản cũ, mở DB phiên bản tương lai phải cảnh báo, không tự ghi đè; crash giữa migration cần rollback/reconcile được.
+- **Build:** checkout sạch → cài từ lock → test → tạo binary → đóng gói notices/giấy phép → chạy trên máy Windows cài sạch **không có CUDA/cuDNN** bằng ASR CPU INT8 → test GPU mode riêng với DLL/CUDA12/cuDNN9 tương thích. Không phải build PASS nếu thiếu quyền voice/model/FFmpeg/PySide6.
+- Trong P2 tạo pre-commit/CI pipeline trước khi GUI lớn lên; log commit/model/script/rights hashes trong production manifest.
+
+### 12.2. Quota cache và chiến lược resume render
+
+- Trước khi chạy, ước lượng scratch bytes = bitrate proxy (bit/s) × source duration (s) / 8 + size audio extracted + (frame count × frame avg bytes) + size TTS WAV + staging render + reserve. Phải đo baseline P1a trên nguồn có quyền; không gán vài GB/job nếu chưa đo. Chặn job khi thiếu free disk hoặc vượt quota.
+- **Chỉ tự dọn artifact có thể tái tạo** theo TTL/LRU và checkpoint an toàn. Không tự xóa video gốc, rights manifest, approved script, MP4 đầu ra, dữ liệu cần phục hồi.
+- P6 render segment **2–5 phút là con số đề xuất thử**: mỗi phần có hash, codec/timebase, QC; resume chỉ phần chưa hoàn thành, sau đó concat/normalize phù hợp. Không stream-copy khi tham số codec/audio/GOP không đồng nhất; phải kiểm đồng bộ audio/subtitle sau concat. Không coi một lệnh FFmpeg encode cả phim là khả năng resume.
 
 ## 13. LỘ TRÌNH, OWNER, NGÂN SÁCH VÀ ƯỚC LƯỢNG P0–P6
 
@@ -593,7 +615,16 @@ Thiếu video có quyền/reviewer/ba review mẫu thì **không được tuyên
 - **P1 GO:** engine kỹ thuật chạy offline trên máy thật; Review Script Generator được chấm độc lập, thresholds được hiệu chuẩn từ golden set, review tiếng Việt đạt mức đã duyệt. Nếu không đạt, chỉ được thử lại trong budget hoặc đề xuất giảm phạm vi review ngắn 3–5 phút, guided/human correction; không cam kết P3/P4.
 - **P3 GO:** từ video EN có quyền ra MP4 có lời kể Việt và kịch bản AI viết thật, **đạt ngưỡng rubric P1**, không critical claim unsupported/contradicted, đủ voice/rights/ffprobe/human listening.
 - **P4 GO:** cùng pipeline thực chạy trọn qua GUI, không dùng nút giả/CLI thủ công; P3 phải đã đạt.
-- **Release GO:** bản Windows cài sạch, license/voice/weights/FFmpeg/PySide6 đã kiểm, offline audit, security/QC/recovery được reviewer và owner chấp thuận.
+- **Release GO:** chạy được bản Windows **cài sạch không có CUDA** theo CPU baseline đã đo, GPU mode chỉ bật với đúng DLL; license/voice/weights/FFmpeg/PySide6, offline audit, QA/recovery và owner approval.
+
+### 15.8. Reviewers, metric bổ trợ và giới hạn kết luận
+
+- **Hai reviewer độc lập** chấm cả 03 bài gold người viết lẫn N bài sinh AI trong P1b, không nhìn nhãn tác giả trước khi chấm. Lưu điểm từng tiêu chí và từng người, raw agreement, ghi chép bất đồng + phiên đối chiếu có bằng chứng; thống kê kappa chỉ báo khi đủ mẫu, không quảng cáo độ tin cậy từ n quá nhỏ.
+- Bổ sung **5 câu hỏi giá trị bình luận** (0–2 mỗi câu, người chấm): review thêm điều gì ngoài recap, nhận xét có cơ sở không, có phân biệt opinion/fact không, có giải thích tình tiết/cảm xúc không, đọc xong có hiểu sâu hơn không. Tách khỏi 10–15 QA tình tiết phim.
+- Blind human-vs-AI preference test đo usefulness và phong cách bằng bài ẩn nhãn; đoán AI hay người chỉ là thăm dò, **không phải thước đo chất lượng**.
+- Báo cáo **raw 4-gram overlap**, **entity-conditional overlap** (loại tên/phrase được định nghĩa trước từ cả mẫu và script), **tỷ lệ quote gắn nhãn**, và tỷ lệ non-quote riêng. Quote được loại khỏi tử/mẫu của metric non-quote nhưng tỷ lệ quote vẫn phải báo để tránh gaming. Báo cáo **cả 03 bài người viết và mọi mẫu AI**, không chỉ trung bình.
+- Chấm **sau TTS bằng WAV** theo thang 0/1/2 (khó nghe / nghe được còn cứng / rõ tự nhiên), cùng duration thật, lỗi phát âm/tốc độ và ngắt câu; không đánh đồng R5 chấm văn bản với chất lượng voice nghe được.
+- Với **1 video n=1**, kết quả là smoke/calibration **không có giá trị chứng minh chất lượng sản phẩm tổng quát**. Trước khi tuyên bố độ ổn định vượt fixture đầu, thêm ít nhất 1 video khác thể loại/bối cảnh có quyền và chấm độc lập.
 
 ## 16. QUẢN LÝ NGUỒN, QUYỀN SỬ DỤNG VÀ BẢO MẬT
 
@@ -616,15 +647,17 @@ Thiếu video có quyền/reviewer/ba review mẫu thì **không được tuyên
 | LLM bịa nội dung review / **8B viết dài bị lặp, đổi nhân vật, sai logic** | **Rất cao** | P1 golden review + 5 tiêu chí rubric, StoryPack theo section, claim audit, thử model nhỏ/trung bình theo budget; không đạt thì đề xuất review ngắn 3–5 phút + reviewer |
 | Model VLM không hiểu chuỗi hành động/phim dài | Rất cao | **Không bắt buộc VLM ở P3**: scene detect + thoại + vài keyframe, người dùng duyệt events; VLM chỉ mở sau spike; phim dài map–reduce có source PTS |
 | Dịch thiếu nghĩa, tên riêng sai | Cao | Corpus đối chiếu, correction UI, reviewer |
-| GPU 8 GB không đủ VLM + ASR đồng thời | Cao | One-heavy-model scheduling; CPU fallback |
+| Windows CUDA runtime và đóng gói installer | Cao | Clean-install Windows **không có CUDA**, CPU CTranslate2 INT8 được đo, GPU DLL/runtime riêng; không suy ra inference OK từ nvidia-smi |
+| GPU 8 GB không đủ VLM + ASR đồng thời | Cao | One-heavy-model scheduling; không quảng cáo VLM CPU fallback hiệu quả trước benchmark |
 | **Không có video EN mẫu có quyền** | **Cao — chặn P0/P1 quality** | P0 phải giao 1 source 3–10 phút, SHA, quyền analysis và reuse; không dùng phim ngoài chưa được phép |
 | **Thiếu reviewer hoặc 03 bài review gold** | **Cao — chặn P0/P1 quality** | Chốt reviewer, lịch chấm, 3 phong cách review và 10–15 câu hỏi từ P0; reviewer sign-off |
 | **ClaimAudit dùng LLM tự xác nhận** | **Rất cao** | Exact/contains, semantic retrieval và rule checks không-LLM; không đủ evidence tự INSUFFICIENT_EVIDENCE; reviewer quyết định |
 | File video có bản quyền không hợp lệ | Rất cao | Rights intake và clip-filter |
+| VieNeu weights/voice không cho phép phân phối, phương án B chưa có | **Cao — blocker P3/release** | License audit sớm, nghiên cứu Piper **GPL-3.0** + voice VI thực + terms; hoặc voice người dùng có quyền ở chế độ Guided, không lẫn với auto-TTS |
 | Giấy phép mô hình/code cản đóng gói | Cao | License audit trước download/integration |
 | GUI trông xong nhưng pipeline vẫn giả lập | Rất cao | Product E2E bắt buộc ở P3 |
 | Windows path Unicode, codec, audio sync sai | Cao | Test thực bằng FFprobe/FFmpeg, Windows E2E |
-| Mất điện/crash khi render | Cao | State checkpoint, temp outputs, hashes |
+| Mất điện/crash khi render | Cao | Render phân đoạn có hash/QC, resume đoạn chưa xong, concat kiểm sync, staging atomic; không hứa resume cho encode đơn lệnh |
 | API/model tự kết nối Internet | Cao | Firewall + process audit trong offline test |
 
 ## 18. CÔNG VIỆC TỰ PHÁT TRIỂN KHÔNG THỂ BỎ QUA
@@ -676,6 +709,8 @@ Ngày tra cứu: **07/11/2026**. Các đường dẫn là nguồn upstream/giớ
 - llama.cpp — https://github.com/ggml-org/llama.cpp
 - Qwen3-VL — https://github.com/QwenLM/Qwen3-VL
 - VieNeu-TTS — https://github.com/pnnbao97/VieNeu-TTS
+- Piper active repository (GPL-3.0; dự phòng cần kiểm tra voice Việt) — https://github.com/OHF-Voice/piper1-gpl
+- Piper legacy archived — https://github.com/rhasspy/piper
 - OpenTimelineIO — https://github.com/AcademySoftwareFoundation/OpenTimelineIO
 - Qt for Python / PySide6 — https://pypi.org/project/PySide6/
 - FFmpeg legal — https://ffmpeg.org/legal.html
