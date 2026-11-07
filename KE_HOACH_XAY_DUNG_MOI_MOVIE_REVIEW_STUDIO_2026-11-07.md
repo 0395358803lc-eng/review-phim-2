@@ -140,32 +140,58 @@
 
 **Chú ý:** Không có thư viện nào trong danh sách GitHub thay thế trọn vẹn lõi hiểu phim → chọn sự kiện → viết review mới → audit tính đúng. Đây là phần dự án phải tự thiết kế và kiểm thử.
 
-#### 2.5.7. Hợp đồng dữ liệu kịch bản (mẫu thiết kế, KHÔNG phải đầu ra AI đã chạy)
+#### 2.5.7. Hợp đồng dữ liệu cho đủ sáu đầu ra của AI Script Studio
+
+**Quy ước:** JSON Schema/Pydantic phải validate, mọi artifact có schema_version, project ID, source SHA, producer/model revision, timestamps; ID ổn định và SHA của file nguồn hoặc revision. Các ví dụ dưới đây **chỉ là contract thiết kế**, không phải kết quả chạy mô hình. JSON là nguồn dữ liệu có thẩm quyền, Markdown và voice handoff được dẫn xuất từ revision đã xác thực.
+
+**1) review_outline.json — OutlineContract v1**
 
 ~~~json
-{
-  "schema_version": "review_script_v1",
-  "project_id": "PRJ_DEMO",
-  "review_language": "vi",
-  "style": "ke_chuyen_loi_cuon",
-  "spoiler_policy": "full_recap",
-  "target_duration_sec": null,
-  "status": "NEEDS_REVIEW",
-  "sections": [
-    {
-      "section_id": "SEC_001",
-      "role": "hook",
-      "narration_vi": "Nội dung được tạo sau khi có bằng chứng.",
-      "event_refs": ["EV_001"],
-      "evidence_refs": ["EVID_001"],
-      "source_spans_ms": [{"start": 1000, "end": 8000}],
-      "claim_refs": ["CL_001"],
-      "claim_audit_state": "INSUFFICIENT_EVIDENCE"
-    }
-  ],
-  "approved_script_sha256": null
-}
+{"schema_version":"outline_v1","project_id":"PRJ_DEMO","source_sha256":"<sha>","sections":[{"section_id":"SEC_001","purpose":"hook","event_refs":["EV_001"],"target_words":100,"spoiler_level":"full"}],"state":"DRAFT"}
 ~~~
+
+**2) review_script.json — ScriptContract v1**
+
+~~~json
+{"schema_version":"review_script_v1","project_id":"PRJ_DEMO","source_sha256":"<sha>","entity_lexicon_sha256":"<sha>","status":"NEEDS_REVIEW","sections":[{"section_id":"SEC_001","narration_vi":"Đây chỉ là văn bản ví dụ.","sentences":[{"sentence_id":"S_001","kind":"FACT","text_vi":"Đây chỉ là văn bản ví dụ.","event_refs":["EV_001"],"evidence_refs":["EVID_001"],"claim_refs":["CL_001"],"audit_state":"INSUFFICIENT_EVIDENCE"}]}],"revision_sha256":null}
+~~~
+
+Loại câu: FACT, OPINION, QUOTE, TRANSITION. **FACT cần event_ref; OPINION được đánh dấu rõ, không được là suy đoán trá hình; QUOTE cần quote_id và evidence_ref**. Việc có ref chưa đủ để tự xác nhận đúng.
+
+**3) review_script.md — RenderedMarkdownContract v1** (được tái tạo từ JSON, không phải nguồn sự thật riêng)
+
+~~~markdown
+<!-- schema: review_script_md_v1; source: review_script.json; revision: <sha> -->
+# Kịch bản review tiếng Việt
+## SEC_001 — Mở đầu
+Đây chỉ là văn bản ví dụ.
+~~~
+
+Chỉ xuất **lời đọc** vào Markdown voice handoff; ghi chú đạo diễn/claim/provenance lưu riêng trong JSON.
+
+**4) script_validation.json — AuditContract v1**
+
+~~~json
+{"schema_version":"script_validation_v1","script_revision_sha256":"<sha>","claims":[{"claim_id":"CL_001","sentence_id":"S_001","evidence_refs":["EVID_001"],"signals":{"exact_quote_match":false,"semantic_retrieval_score":0.67,"entity_grounding":"UNKNOWN"},"state":"INSUFFICIENT_EVIDENCE","reason":"Chưa đủ căn cứ"}],"critical_open_count":1,"gate":"NEEDS_REVIEW"}
+~~~
+
+**Semantic similarity chỉ tìm nguồn ứng viên**, không bao giờ tự đẩy claim lên SUPPORTED.
+
+**5) script_revision_manifest.json — RevisionApprovalContract v1**
+
+~~~json
+{"schema_version":"script_revision_manifest_v1","project_id":"PRJ_DEMO","source_sha256":"<sha>","story_pack_sha256":"<sha>","entity_lexicon_sha256":"<sha>","script_revision_sha256":"<sha>","model_id":"<local-model>","model_revision_sha256":"<sha>","generation_config_sha256":"<sha>","audit_sha256":"<sha>","reviewer_ids":[],"reviewer_decisions":[],"approved":false,"approved_at_utc":null}
+~~~
+
+**6) voice_script.json — NarrationHandoffContract v1**
+
+~~~json
+{"schema_version":"voice_script_v1","approved_script_revision_sha256":"<sha>","language":"vi","voice_id":"<licensed-voice>","segments":[{"cue_id":"CUE_001","section_id":"SEC_001","sentence_ids":["S_001"],"text_vi":"Đây chỉ là văn bản ví dụ.","pronunciation_map_ref":"<ref>","output_start_ms":null,"duration_ms":null}],"ready_for_tts":false}
+~~~
+
+ready_for_tts chỉ true khi script revision chính xác đã được duyệt, không còn critical claim chưa giải quyết, license voice hợp lệ. Thời gian cue cập nhật sau khi đo WAV TTS thực.
+
+**Contract tests P2:** mọi file validate schema + source/revision/hash; tên/ID dẫn chiếu tồn tại, source timestamps hợp lệ, quote được gắn nhãn; thay script/source/rights/lexicon làm invalid approval và voice; dữ liệu không đạt schema không được chuyển TTS, timeline hay phát hành.
 
 #### 2.5.8. Kiểm thử và nghiệm thu bắt buộc
 
